@@ -1,0 +1,90 @@
+#include"pch.h"
+#include"ThreadPool.h"
+template<class T,class T1>
+ThreadPool<T, T1>::ThreadPool() 
+	:done(false), isEmpty(true), isFull(false) {
+}
+
+//设置池中初始线程数
+template<class T, class T1>
+void ThreadPool<T,T1>::setSize(int num) {
+	(*this).initnum = num;
+}
+
+//添加任务
+template<class T, class T1>
+void ThreadPool<T, T1>::addTask(const Task&f,T1 args) {
+
+	if (!done) {
+		//保护共享资源    
+		unique_lock<mutex>lk(_mutex);
+
+		//要是任务数量到了最大,就等待处理完再添加
+		while (isFull) {
+			cond.wait(lk);
+		}
+
+		//给队列中添加任务
+		task.push({f,args});
+
+		if (task.size() == initnum)
+			isFull = true;
+
+		cout << "Add a task" << endl;
+		isEmpty = false;
+		cond.notify_one();
+	}
+}
+
+template<class T, class T1>
+void ThreadPool<T, T1>::finish() {
+
+	//线程池结束工作
+	for (size_t i = 0; i < threads.size(); i++) {
+		threads[i].join();
+	}
+}
+
+template<class T, class T1>
+void ThreadPool<T, T1>::runTask() {
+
+	//不断遍历队列,判断要是有任务的话,就执行
+	while (!done) {
+
+		unique_lock<mutex>lk(_mutex);
+
+		//队列为空的话,就等待任务
+		while (isEmpty) {
+			cond.wait(lk);
+		}
+
+		Task ta;
+
+		auto pcb = task.front();
+		//转移控制快,将左值引用转换为右值引用
+		ta = move(pcb.first);
+		task.pop();
+
+		if (task.empty()) {
+			isEmpty = true;
+		}
+
+		isFull = false;
+		cond.notify_one();
+		ta(pcb.second);
+	}
+}
+
+template<class T, class T1>
+void ThreadPool<T, T1>::start(int num) {
+
+	setSize(num);
+
+	for (int i = 0; i < num; i++) {
+		threads.push_back(thread(&ThreadPool::runTask, this));
+	}
+}
+
+template<class T, class T1>
+ThreadPool<T, T1>::~ThreadPool() {
+}
