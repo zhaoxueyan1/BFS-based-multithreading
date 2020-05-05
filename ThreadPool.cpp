@@ -1,19 +1,17 @@
 #include"pch.h"
 #include"ThreadPool.h"
-template<class T,class T1>
-ThreadPool<T, T1>::ThreadPool() 
+
+ThreadPool::ThreadPool() 
 	:done(false), isEmpty(true), isFull(false) {
 }
 
 //设置池中初始线程数
-template<class T, class T1>
-void ThreadPool<T,T1>::setSize(int num) {
+void ThreadPool::setSize(int num) {
 	(*this).initnum = num;
 }
 
 //添加任务
-template<class T, class T1>
-void ThreadPool<T, T1>::addTask(const Task&f,T1 args) {
+void ThreadPool::addTask(const Task& f, pair<int,int>& args) {
 
 	if (!done) {
 		//保护共享资源    
@@ -36,8 +34,7 @@ void ThreadPool<T, T1>::addTask(const Task&f,T1 args) {
 	}
 }
 
-template<class T, class T1>
-void ThreadPool<T, T1>::finish() {
+void ThreadPool::finish() {
 
 	//线程池结束工作
 	for (size_t i = 0; i < threads.size(); i++) {
@@ -45,8 +42,7 @@ void ThreadPool<T, T1>::finish() {
 	}
 }
 
-template<class T, class T1>
-void ThreadPool<T, T1>::runTask() {
+void ThreadPool::runTask() {
 
 	//不断遍历队列,判断要是有任务的话,就执行
 	while (!done) {
@@ -75,8 +71,8 @@ void ThreadPool<T, T1>::runTask() {
 	}
 }
 
-template<class T, class T1>
-void ThreadPool<T, T1>::start(int num) {
+
+void ThreadPool::start(int num) {
 
 	setSize(num);
 
@@ -85,6 +81,5 @@ void ThreadPool<T, T1>::start(int num) {
 	}
 }
 
-template<class T, class T1>
-ThreadPool<T, T1>::~ThreadPool() {
+ThreadPool::~ThreadPool() {
 }

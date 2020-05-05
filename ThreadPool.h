@@ -12,11 +12,10 @@
 #define N 10
 
 using namespace std;
-template<class T,class T1>
 class ThreadPool {
 public:
 	//自定义void()的函数类型
-	typedef function<T>Task;
+	typedef function<void(pair<int,int>)>Task;
 
 	ThreadPool();
 	~ThreadPool();
@@ -28,7 +27,7 @@ public:
 	vector<thread>threads;
 
 	//任务队列
-	queue<pair<Task,T1>>task;
+	queue<pair<Task,pair<int,int>>>task;
 
 	//互斥锁条件变量
 	mutex _mutex;
@@ -43,7 +42,7 @@ public:
 	bool isFull;
 
 public:
-	void addTask(const Task& f,T1 args);
+	void addTask(const Task& f,pair<int,int>& args);
 	void start(int num);
 	void setSize(int num);
 	void runTask();
